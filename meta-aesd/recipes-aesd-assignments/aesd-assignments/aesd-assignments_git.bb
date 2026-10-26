@@ -4,11 +4,11 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 # TODO: Set this  with the path to your assignments repo.  Use https protocol and a public
 # repo, or see assignment instructions for use with ssh keys
-SRC_URI = "https://github.com/cu-ecen-aeld/<your repo url>;protocol=https;nobranch=1"
+SRC_URI = "git://github.com/cu-ecen-aeld/assignments-3-and-later-cafhaf22.git;protocol=https;nobranch=1"
 
 PV = "1.0+git${SRCPV}"
 # TODO: set to reference a specific commit hash in your assignment repo
-SRCREV = "enter-commit-reference-here"
+SRCREV = "c82d77773c8aebfc29838062d4d5aa75ad0e9701"
 
 # TODO: Add the aesdsocket application and any other files you will install in do_install below
 # See https://github.com/openembedded/openembedded-core/blob/wrynose/meta/conf/bitbake.conf for path prefixes like ${bindir}
@@ -24,11 +24,14 @@ do_configure () {
 
 do_compile () {
     # TODO: switch to the server directory where your source code to be built is located
+	cd ${S}/server
 	oe_runmake
 }
 
 #TODO: add initscript necessary changes here
-
+inherit update-rc.d
+INITSCRIPT_PACKAGES = "${PN}"
+INITSCRIPT_NAME:${PN} = "aesdsocket-start-stop.sh"
 do_install () {
 	# TODO: Install your binaries/scripts here.
 	# Be sure to install the target directory with install -d first
@@ -38,4 +41,8 @@ do_install () {
 	# https://docs.yoctoproject.org/ref-manual/variables.html?highlight=workdir#term-S
 	# See examples at https://github.com/cu-ecen-aeld/yocto-hello-world for your relevant build as well
 	# Remember to copy files relative to their location after building, which may be under the server subdirectory
+	install -d ${D}${sysconfdir}/init.d
+	install -d ${D}${bindir}
+	install -m 0755 ${S}/server/aesdsocket-start-stop.sh ${D}${sysconfdir}/init.d
+	install -m 0755 ${S}/server/aesdsocket ${D}${bindir}/aesdsocket
 }
