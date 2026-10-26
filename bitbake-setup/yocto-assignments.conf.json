@@ -46,7 +46,10 @@
                 ],
                 "bb-env-passthrough-additions": [
                     "SSTATE_DIR",
-                    "DL_DIR"
+                    "DL_DIR",
+                    "TMPDIR",
+                    "BB_NUMBER_THREADS",
+                    "PARALLEL_MAKE"
                 ]
             }
         ]

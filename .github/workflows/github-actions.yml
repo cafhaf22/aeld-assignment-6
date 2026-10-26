@@ -8,6 +8,12 @@ on:
 jobs:
       full-test:
         runs-on: self-hosted
+        env:
+          BB_NUMBER_THREADS: '4'
+          PARALLEL_MAKE: '-j 4'
+          TMPDIR: '/data/yocto/ci-tmp'
+          DL_DIR: '/data/yocto/downloads'
+          SSTATE_DIR : '/data/yocto/sstate-cache'
         steps:
           - uses: actions/checkout@v7
             with:
@@ -21,11 +27,6 @@ jobs:
               GIT_CONFIG_VALUE_0: '${{ github.workspace }}'
               GIT_CONFIG_KEY_1: safe.directory
               GIT_CONFIG_VALUE_1: '${{ github.workspace }}/*'
-              BB_NUMBER_THREADS: '4'
-              PARALLEL_MAKE: '-j 4'
-              TMPDIR: '/data/yocto/tmp'
-              DL_DIR: '/data/yocto/downloads'
-              SSTATE_DIR : '/data/yocto/sstate-cache'
           # Only needed for private repositories, remove this step and the cleanup
           # step below when using https with public repositories
           - uses: ./.github/actions/ssh-key
@@ -52,6 +53,19 @@ jobs:
                 )
               fi
 
+              if [[ -n "${TMPDIR:-}" ]]; then
+                echo "Using TMPDIR=${TMPDIR}"
+                docker_args+=(
+                  -e "TMPDIR=${TMPDIR}"
+                  -v "${TMPDIR}:${TMPDIR}"
+                )
+              fi
+
+              docker_args+=(
+                -e "BB_NUMBER_THREADS=${BB_NUMBER_THREADS}"
+                -e "PARALLEL_MAKE=${PARALLEL_MAKE}"
+              )
+
               docker run --rm \
                  "${docker_args[@]}" \
                  ${SSH_DOCKER_ARGS:-} \
@@ -70,6 +84,8 @@ jobs:
               docker run --rm \
                  -e SKIP_BUILD=1 \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+                 -e TMPDIR=${TMPDIR} \
+                 -v "${TMPDIR}:${TMPDIR}" \
                  cuaesd/aesd-autotest:26-assignment6-yocto \
                  --workdir=${GITHUB_WORKSPACE} \
                  ./full-test.sh
